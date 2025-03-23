@@ -1,87 +1,78 @@
 import re
 
 
-def clean_sequence(sequence):
-    return re.sub(r'[^ATCG]', '', sequence)
+def read_file(path):
+    """Чтение файла и удаление цифр и пробелов"""
+    with open(path, 'r') as file:
+        content = file.read()
+    # Убираем все символы, кроме A, T, C, G
+    return re.sub(r'[^ATCG]', '', content)
 
 
-def find_specific_sequence(seq1, seq2):
-    for i in range(1, len(seq1) + 1):
-        for j in range(0, len(seq1) - i + 1):
-            subsequence = seq1[j:j + i]
-            if subsequence not in seq2:
-                return subsequence
+def get_substrings(sequence, min_len=2, max_len=6):
+    """Получение всех подстрок заданной длины от min_len до max_len"""
+    substrings = set()
+    for length in range(min_len, max_len + 1):
+        for i in range(len(sequence) - length + 1):
+            substrings.add(sequence[i:i + length])
+    return substrings
+
+
+def find_min_unique(substrings1, substrings2):
+    """Нахождение минимальной подстроки из substrings1, которой нет в substrings2"""
+    unique_substrings = substrings1 - substrings2
+    if unique_substrings:
+        return min(unique_substrings, key=len)
     return None
 
 
-def find_common_sequence(seq1, seq2):
-    max_len = 0
-    common_subsequence = ''
-    for i in range(len(seq1)):
-        for j in range(len(seq2)):
-            k = 0
-            while (i + k < len(seq1)) and (j + k < len(seq2)) and seq1[i + k] == seq2[j + k]:
-                k += 1
-            if k > max_len:
-                max_len = k
-                common_subsequence = seq1[i:i + k]
-    return common_subsequence
-
-
-def longest_common_subsequence(seq1, seq2):
-    m, n = len(seq1), len(seq2)
-    dp = [[0] * (n + 1) for _ in range(m + 1)]
-
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            if seq1[i - 1] == seq2[j - 1]:
-                dp[i][j] = dp[i - 1][j - 1] + 1
+def find_max_common(s1, s2):
+    """Нахождение максимальной общей подпоследовательности для s1 и s2"""
+    max_common = ""
+    for i in range(len(s1)):
+        for j in range(i + len(max_common), len(s1)):
+            sub = s1[i:j]
+            if sub in s2:
+                max_common = sub
             else:
-                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
-
-    lcs = []
-    i, j = m, n
-    while i > 0 and j > 0:
-        if seq1[i - 1] == seq2[j - 1]:
-            lcs.append(seq1[i - 1])
-            i -= 1
-            j -= 1
-        elif dp[i - 1][j] > dp[i][j - 1]:
-            i -= 1
-        else:
-            j -= 1
-
-    return ''.join(reversed(lcs))
+                break
+    return max_common
 
 
-covid_uhan_genome = """ATGCGTGAGAGTGGAGGACCTGCGTACAGGACTGGGAGGAGGCGTGAGGAGTGGAGGAC"""
-h5n1_gripp_genome = """ATGCGTGGAGGAGGAGTGGAGGACTAGGTAGGAACCTGAGAGAGGGGAGAGAGGAG"""
-covid_delta_genome = """ATGGGAGAGTGGAGGACTGAGGACAGGGGAGGGAGGAGGAGAGAGGAGAGGAGAG"""
+def main():
+    # Чтение файлов и очистка данных
+    dna1 = read_file('covid_uhan.txt')
+    dna2 = read_file('h5n1.txt')
+    dna3 = read_file('covid_delta.txt')
 
-clean_covid_uhan = clean_sequence(covid_uhan_genome)
-clean_h5n1_gripp = clean_sequence(h5n1_gripp_genome)
-clean_covid_delta = clean_sequence(covid_delta_genome)
+    # Получаем подстроки длиной от 2 до 6 для каждого вируса
+    substrings1 = get_substrings(dna1)
+    substrings2 = get_substrings(dna2)
+    substrings3 = get_substrings(dna3)
 
-specific_covid_uhan = find_specific_sequence(clean_covid_uhan, clean_h5n1_gripp)
-print(f"Минимальная специфичная последовательность для COVID-Ухань: {specific_covid_uhan}")
+    # Нахождение минимальной специфичной последовательности
+    min_unique_1_2 = find_min_unique(substrings1, substrings2)
+    min_unique_2_1 = find_min_unique(substrings2, substrings1)
+    min_common_1_2 = find_min_unique(substrings1, substrings2)
 
-specific_h5n1 = find_specific_sequence(clean_h5n1_gripp, clean_covid_uhan)
-print(f"Минимальная специфичная последовательность для H5N1: {specific_h5n1}")
+    min_unique_1_2_3 = find_min_unique(substrings1, substrings2.union(substrings3))
+    min_unique_3_1_2 = find_min_unique(substrings3, substrings1.union(substrings2))
 
-common_sequence = find_common_sequence(clean_covid_uhan, clean_h5n1_gripp)
-print(f"Минимальная общая последовательность для COVID-Ухань и H5N1: {common_sequence}")
+    # Нахождение максимальной общей подпоследовательности для COVID-Ухань и COVID-Дельта
+    max_common_1_3 = find_max_common(dna1, dna3)
+    ratio = len(max_common_1_3) / len(dna1) if len(dna1) > 0 else 0
 
-specific_covid_uhan_exclude_delta_h5n1 = find_specific_sequence(clean_covid_uhan, clean_covid_delta)
-specific_covid_uhan_exclude_h5n1 = find_specific_sequence(specific_covid_uhan_exclude_delta_h5n1, clean_h5n1_gripp)
-print(
-    f"Минимальная специфичная последовательность для COVID-Ухань, отсутствующая в COVID-Дельта и H5N1: {specific_covid_uhan_exclude_h5n1}")
+    # Вывод результатов
+    print(f"Минимальная специфичная последовательность для COVID-Ухань, отсутствующая в H5N1: {min_unique_1_2}")
+    print(f"Минимальная специфичная последовательность для H5N1, отсутствующая в COVID-Ухань: {min_unique_2_1}")
+    print(f"Минимальная общая последовательность для COVID-Ухань и H5N1: {min_common_1_2}")
+    print(
+        f"Минимальная специфичная последовательность для COVID-Ухань, отсутствующая в COVID-Дельта и H5N1: {min_unique_1_2_3}")
+    print(
+        f"Минимальная специфичная последовательность для COVID-Дельта, отсутствующая в COVID-Ухань и H5N1: {min_unique_3_1_2}")
+    print(f"Максимальная общая подпоследовательность для COVID-Ухань и COVID-Дельта: {max_common_1_3}")
+    print(f"Соотношение длины общей подпоследовательности к длине генома COVID-Ухань: {ratio}")
 
-specific_covid_delta_exclude_h5n1_uhan = find_specific_sequence(clean_covid_delta, clean_h5n1_gripp)
-specific_covid_delta_exclude_uhan = find_specific_sequence(specific_covid_delta_exclude_h5n1_uhan, clean_covid_uhan)
-print(
-    f"Минимальная специфичная последовательность для COVID-Дельта, отсутствующая в COVID-Ухань и H5N1: {specific_covid_delta_exclude_uhan}")
 
-lcs_covid_uhan_delta = longest_common_subsequence(clean_covid_uhan, clean_covid_delta)
-print(f"Максимальная общая подпоследовательность для COVID-Ухань и COVID-Дельта: {lcs_covid_uhan_delta}")
-print(
-    f"Длина максимальной общей подпоследовательности к длине генома: {len(lcs_covid_uhan_delta) / len(clean_covid_uhan)}")
+if __name__ == "__main__":
+    main()
