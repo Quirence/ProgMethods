@@ -99,6 +99,34 @@ def main():
     print("Макс. общая подпоследовательность для 1 и 3:", max_common13)
     print("Соотношение длины общей подпоследовательности к длине 1:", ratio)
 
+def test():
+    """Тестирование функций на искусственных данных"""
+    dna1 = "ATCGAT"
+    dna2 = "GATCGA"
+    dna3 = "TCGATC"
+
+    subs1 = get_substrings(dna1)
+    subs2 = get_substrings(dna2)
+    subs3 = get_substrings(dna3)
+
+    expected_unique_1_2 = {'TCGAT', 'ATCGAT', 'CGAT'}
+    expected_unique_2_1 = {'GATC', 'GATCG', 'GATCGA'}
+    expected_common_1_2 = {'CGA', 'TC', 'AT', 'GAT', 'ATCGA', 'ATCG', 'GA', 'TCG', 'TCGA', 'CG', 'ATC'}
+    expected_missing_1_23 = {'ATCGAT'}
+    expected_unique_3_12 = {'TCGATC', 'CGATC'}
+    expected_max_common_1_3 = "TCGAT"
+    expected_ratio = len(expected_max_common_1_3) / len(dna1)
+
+    assert find_unique_in_first(subs1, subs2) == expected_unique_1_2, f"Ошибка в уникальных подстроках 1: {find_unique_in_first(subs1, subs2)}"
+    assert find_unique_in_first(subs2, subs1) == expected_unique_2_1, f"Ошибка в уникальных подстроках 2: {find_unique_in_first(subs2, subs1)}"
+    assert find_common(subs1, subs2) == expected_common_1_2, f"Ошибка в общих подстроках 1 и 2: {find_common(subs1, subs2)}"
+    assert find_missing_in_second_and_third(subs1, subs2, subs3) == expected_missing_1_23, f"Ошибка в отсутствующих подстроках 1: {find_missing_in_second_and_third(subs1, subs2, subs3)}"
+    assert find_unique_in_first(subs3, subs1) - set(subs2) == expected_unique_3_12, f"Ошибка в уникальных подстроках 3: {find_unique_in_first(subs3, subs1) - set(subs2)}"
+    assert find_max_common(dna1, dna3) == expected_max_common_1_3, f"Ошибка в максимальной общей подпоследовательности: {find_max_common(dna1, dna3)}"
+    assert abs((len(find_max_common(dna1, dna3)) / len(dna1)) - expected_ratio) < 1e-6, f"Ошибка в вычислении соотношения: {len(find_max_common(dna1, dna3)) / len(dna1)}"
+
+    print("Все тесты пройдены!")
+
 
 if __name__ == "__main__":
-    main()
+    test()
