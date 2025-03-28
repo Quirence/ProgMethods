@@ -1,10 +1,7 @@
-const fs = require("fs");
-
 const SAMPLE_RATE = 10000;
-const DURATION = 1; // in seconds
-const N = SAMPLE_RATE * DURATION; // Number of samples
+const DURATION = 1;
+const N = SAMPLE_RATE * DURATION;
 
-// Generate signal
 function generateSignal(frequencies, amplitudes) {
     let signal = new Array(N).fill(0);
     for (let i = 0; i < N; i++) {
@@ -16,42 +13,41 @@ function generateSignal(frequencies, amplitudes) {
     return signal;
 }
 
-// Compute Discrete Fourier Transform (DFT)
 function dft(signal) {
-    let frequencies = [], amplitudes = [];
-    for (let k = 0; k < N / 2; k++) {
+    let halfN = Math.floor(N / 2);
+    let amplitudes = new Array(halfN).fill(0);
+    let frequencies = new Array(halfN);
+
+    for (let k = 0; k < halfN; k++) {
         let real = 0, imag = 0;
         for (let n = 0; n < N; n++) {
             let angle = (2 * Math.PI * k * n) / N;
             real += signal[n] * Math.cos(angle);
             imag -= signal[n] * Math.sin(angle);
         }
-        let amplitude = Math.sqrt(real * real + imag * imag) / N;
-        frequencies.push((k * SAMPLE_RATE) / N);
-        amplitudes.push(amplitude);
+        amplitudes[k] = Math.sqrt(real * real + imag * imag) / N;
+        frequencies[k] = k * SAMPLE_RATE / N;
     }
     return { frequencies, amplitudes };
 }
 
-// Save data to CSV for Excel visualization
-function saveToCSV(frequencies, amplitudes, filename) {
-    let csvContent = "Frequency,Amplitude\n";
+function printForExcel(frequencies, amplitudes) {
+    console.log("Frequency (Hz)\tAmplitude");
     for (let i = 0; i < frequencies.length; i++) {
-        csvContent += `${frequencies[i]},${amplitudes[i]}\n`;
+        console.log(`${frequencies[i]}\t${amplitudes[i]}`);
     }
-    fs.writeFileSync(filename, csvContent);
 }
 
-// Generate and process signals
-let testCases = [
+const testCases = [
     { f: [100], a: [1] },
     { f: [100, 300, 700], a: [1, 1, 1] },
     { f: [100, 300, 700], a: [3, 2, 1] }
 ];
 
-testCases.forEach((testCase, index) => {
-    let signal = generateSignal(testCase.f, testCase.a);
+testCases.forEach(({ f, a }, index) => {
+    console.log(`Test Case ${index + 1}`);
+    let signal = generateSignal(f, a);
     let { frequencies, amplitudes } = dft(signal);
-    saveToCSV(frequencies, amplitudes, `dft_result_${index + 1}.csv`);
-    console.log(`Saved DFT results for case ${index + 1} to dft_result_${index + 1}.csv`);
+    printForExcel(frequencies, amplitudes);
+    console.log("\n");
 });
