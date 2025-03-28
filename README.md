@@ -1,4 +1,4 @@
-Рассмотрим функцию `generateSignal`, которая реализует генерацию сигнала, представляющего сумму косинусоидальных функций с заданными частотами и амплитудами. Пусть заданы множества частот $\displaystyle\{ f_1, f_2, \dots, f_m \}$ и амплитуд $\displaystyle\{ a_1, a_2, \dots, a_m \}$. Для каждого дискретного момента времени $\displaystyle t_i = \frac{i}{SAMPLE\_RATE}$, где $\displaystyle i = 0, 1, \dots, N-1$ и $\displaystyle N = SAMPLE\_RATE \times DURATION$, вычисляется значение сигнала по формуле  
+Рассмотрим функцию `generateSignal`, которая реализует генерацию сигнала, представляющего сумму косинусоидальных функций с заданными частотами и амплитудами. Пусть заданы множества частот $\displaystyle\{ f_1, f_2, \dots, f_m \}$ и амплитуд $\displaystyle\{ a_1, a_2, \dots, a_m \}$. Для каждого дискретного момента времени $\displaystyle t_i = \frac{i}{SampleRate}$, где $\displaystyle i = 0, 1, \dots, N-1$ и $\displaystyle N = SampleRate \times duration$, вычисляется значение сигнала по формуле  
 
 $\displaystyle x(t_i) = \sum_{j=1}^{m} a_j \cos\left( 2 \pi f_j t_i \right).$  
 
@@ -6,8 +6,7 @@ $\displaystyle x(t_i) = \sum_{j=1}^{m} a_j \cos\left( 2 \pi f_j t_i \right).$
 
 Переходя к функции `dft`, рассмотрим её цель – вычисление дискретного преобразования Фурье исходного сигнала. Для каждого индекса спектральной компоненты $\displaystyle k$, где $\displaystyle k = 0, 1, \dots, \frac{N}{2}-1$, вычисляются вещественная и мнимая части спектра по формулам  
 
-$\displaystyle X_{real}(k) = \sum_{n=0}^{N-1} x(n) \cos\left( \frac{2\pi k n}{N} \right),$  
-
+$\displaystyle X_{real}(k) = \sum_{n=0}^{N-1} x(n) \cos\left( \frac{2\pi k n}{N} \right),$
 $\displaystyle X_{imag}(k) = - \sum_{n=0}^{N-1} x(n) \sin\left( \frac{2\pi k n}{N} \right).$  
 
 Амплитуда спектральной компоненты определяется как  
@@ -16,7 +15,7 @@ $\displaystyle A(k) = \frac{\sqrt{X_{real}(k)^2 + X_{imag}(k)^2}}{N},$
 
 а соответствующая частота вычисляется по формуле  
 
-$\displaystyle f(k) = \frac{k \cdot SAMPLE\_RATE}{N}.$  
+$\displaystyle f(k) = \frac{k \cdot SampleRate}{N}.$  
 
 При выполнении данной функции используется двойной цикл: внешний цикл по $\displaystyle k$ (около $\displaystyle N/2$ итераций) и внутренний цикл по $\displaystyle n$ (всего $\displaystyle N$ итераций), что приводит к временной сложности алгоритма $\displaystyle O(N^2)$. Данное соотношение существенно ограничивает применимость прямого алгоритма ДПФ при больших значениях $\displaystyle N$, поэтому в практических приложениях часто используется алгоритм быстрого преобразования Фурье (FFT) с временной сложностью $\displaystyle O(N \log N)$.
 
